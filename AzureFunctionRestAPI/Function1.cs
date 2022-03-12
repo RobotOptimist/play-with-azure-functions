@@ -7,13 +7,21 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using AzureFunctionRestAPI.Clients;
 
 namespace AzureFunctionRestAPI
 {
-    public static class Function1
+    public class Function1
     {
+        private readonly NothingClient nothingClient;
+
+        public Function1(NothingClient nothingClient)
+        {
+            this.nothingClient = nothingClient;
+        }
+
         [FunctionName("Function1")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
@@ -25,15 +33,17 @@ namespace AzureFunctionRestAPI
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
 
+            string nothingMessage = nothingClient.DoNothing();
+
             string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+                ? $"This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response. {nothingMessage}"
+                : $"Hello, {name}. This HTTP triggered function executed successfully. {nothingMessage}";
 
             return new OkObjectResult(responseMessage);
         }
 
         [FunctionName("Function2")]
-        public static async Task<IActionResult> RunAgain(
+        public async Task<IActionResult> RunAgain(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
